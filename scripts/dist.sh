@@ -51,26 +51,40 @@ pushd "$TENDERMINTDIR" || exit 1 >/dev/null 2>&1
 make dist
 popd >/dev/null || exit 1 >/dev/null 2>&1
 
-cd ..
-rm -rf dist
-mkdir -p dist
-cp download/bcbchain/build/dist/bcbchain*linux*.tar.gz dist/
-cp download/tendermint/build/dist/tendermint*linux*.tar.gz dist/
+popd >/dev/null || exit 1 >/dev/null 2>&1   # popd from build/download direction
 
-cd dist || exit 1
-mkdir bcbchain
-mkdir tendermint
+rm -rf ./build/pkg
+mkdir -p ./build/pkg
+for OS_TYPE in linux_amd64 darwin_amd64 windows_amd64;do
+  mkdir ./build/pkg/"$OS_TYPE"
 
-tar xf tendermint*.tar.gz -C  tendermint/
-tar xf bcbchain*.tar.gz -C  bcbchain/
-rm -rf ./*.tar.gz
-cp ../../setup/setup.sh .
+  cp ./build/download/bcbchain/build/dist/bcbchain*"$OS_TYPE"*.tar.gz ./build/pkg/"$OS_TYPE"
+  cp ./build/download/tendermint/build/dist/tendermint*"$OS_TYPE"*.tar.gz ./build/pkg/"$OS_TYPE"
 
-tar zcf bcb-node-$VERSION.tar.gz ./*
+  mkdir ./build/pkg/"$OS_TYPE"/bcbchain
+  mkdir ./build/pkg/"$OS_TYPE"/tendermint
 
-rm -rf tendermint bcbchain setup.sh
+  tar xf ./build/pkg/"$OS_TYPE"/tendermint*.tar.gz -C  ./build/pkg/"$OS_TYPE"/tendermint
+  tar xf ./build/pkg/"$OS_TYPE"/bcbchain*.tar.gz -C  ./build/pkg/"$OS_TYPE"/bcbchain
+
+  rm -rf ./build/pkg/"$OS_TYPE"/*.tar.gz
+  cp ./setup/setup.sh ./build/pkg/"$OS_TYPE"/
+
+  pushd ./build/pkg/"$OS_TYPE" >/dev/null 2>&1
+  tar zcf ../bcb-node-"$VERSION"_"$OS_TYPE".tar.gz ./*
+  popd >/dev/null 2>&1
+done
+
+rm -rf ./build/dist
+mkdir -p ./build/dist
+for FILENAME in $(find ./build/pkg -mindepth 1 -maxdepth 1 -type f); do
+  FILENAME=$(basename "$FILENAME")
+	cp "./build/pkg/${FILENAME}" "./build/dist/${FILENAME}"
+done
+
+pushd ./build/dist >/dev/null 2>&1
+shasum -a256 ./* > "./bcb-node_${VERSION}_SHA256SUMS"
+popd >/dev/null 2>&1
 
 echo ""
 echo "==> PACK bcbchain-node success:"
-ls -lh
-popd >/dev/null || exit 1 >/dev/null 2>&1
