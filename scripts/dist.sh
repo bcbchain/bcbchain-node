@@ -26,7 +26,7 @@ pushd "$DOWNLOAD_DIR" || exit 1 >/dev/null 2>&1
 echo "===> Downloading bcbchain..."
 if [ -d "$BCBCHAINDIR" ];then
   pushd "$BCBCHAINDIR" || exit 1 >/dev/null 2>&1
-  git pull
+  git reset --hard origin/master
   popd >/dev/null || exit 1 >/dev/null 2>&1
 else
   git clone https://github.com/bcbchain/bcbchain.git
@@ -35,7 +35,7 @@ fi
 echo "==> Downloading tendermint..."
 if [ -d "$TENDERMINTDIR" ];then
   pushd "$TENDERMINTDIR" || exit 1 >/dev/null 2>&1
-  git pull
+  git reset --hard origin/master
   popd >/dev/null || exit 1 >/dev/null 2>&1
 else
   git clone https://github.com/bcbchain/tendermint.git
